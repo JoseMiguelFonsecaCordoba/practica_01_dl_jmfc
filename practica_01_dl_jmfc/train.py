@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
+from pathlib import Path
 from utils.device import get_device
 from datasets.mnist import get_mnist_loaders
-from models.mlp import MLP
 from engine.trainer import evaluate, fit
 from utils.plotting import plot_history
 from callbacks.early_stopping import EarlyStopping
-from models.cnn import CNN
-import random
 from models.factory import create_model
 
 
@@ -60,6 +58,9 @@ def main() -> None:
     min_delta = 1e-3
     # Cualquier numero hardcodeado/parametro cambia como mi modelo aprende
     weight_decay = 1e-4
+    artifacts_dir = Path("artifacts")
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    best_model_path = artifacts_dir / "best_model.pth"
 
 
     # Un mlp bien entrenado puede resolver la mayoria de problemas
@@ -80,7 +81,7 @@ def main() -> None:
     # ------------------ Crear modelo CNN -------------------------------
     # model = CNN()
     # model = model.to(device)
-    model = create_model("vgg11")
+    model = create_model("vgg11", pretrained=True)
     model = model.to(device)
     ####################################################################
 
@@ -94,17 +95,17 @@ def main() -> None:
     # Estocastico algunas epocas actualiza algunas no
     optimizer = torch.optim.AdamW(
         # Le paso los parametros de mi modelo porque son los que voy a actualizar/optimizar
-        model.parameters(), # Cambian los pesos de mi modelo y cambian a traves de mi entrenamiento
+        (parameter for parameter in model.parameters() if parameter.requires_grad), # Cambian los pesos de mi modelo y cambian a traves de mi entrenamiento
         lr=learning_rate,
         # Momenum: Agregamos un historial
         # Ayuda a suavizar mis gradientes, entreno mas rapido y mejor
         # momentum=0.9
         # Esto lo unico que hace es decirle al modelo que mantenga sus
         # parametros pequenios
-        weight_decay=1e-4
+        weight_decay=weight_decay
     )
 
-    sceduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         # Trabajamo sobre el obtimizador
         optimizer,
         # Queremos minimizar 
@@ -130,12 +131,12 @@ def main() -> None:
         device,
         epochs,
         early_stopping,
-        # sceduler
+        scheduler,
     )
     torch.save(
         # Guardando el estado interno del modelo
         model.state_dict(),
-        "artifacts/best_model.tbh"
+        best_model_path
     )
 
     test_loss = evaluate(
@@ -338,4 +339,3 @@ if __name__ == "__main__":
 # solo necesito la parte de clasificacion
 # congelo la gran mayoria de mi modelo y solo entreno la parte de clasificacion, 
 # es un modelo que ya esta preentrenado, no tengo que entrenar todo el modelo
-

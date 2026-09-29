@@ -5,18 +5,18 @@ from models.base import BaseNN
 from torchvision.models import (vgg11, VGG11_Weights)
 
 class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, pretrained=True):
         super(VGG11, self).__init__(
             name="vgg11",
         )
         self.network = vgg11(
-            weights=VGG11_Weights.DEFAULT
+            weights=VGG11_Weights.DEFAULT if pretrained else None
         )
 
-        for parameter in self.network.features[-1].parameters():
+        for parameter in self.network.features.parameters():
             parameter.requires_grad = False
 
-        in_features = self.network.classifier.in_features
+        in_features = self.network.classifier[-1].in_features
         self.network.classifier[-1] = nn.Linear(
             in_features, 
             num_classes
@@ -99,5 +99,4 @@ class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
     # SERVIDOR DE INFERENCIA   !!!!!1IMPORTANTE!!!!!!
 
     
-
 
