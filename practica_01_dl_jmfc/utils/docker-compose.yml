@@ -8,21 +8,16 @@ services:
       - 8002:8002
 
     volumes:
-      - ./serving/model_repository:/models
+      - ../serving/model_repository:/models
 
-    command: 
-      - tritonserver
-      - --model-repository=/models
-      #en produccion se usa
-      - --model-control-mode=explicit
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ ! -f /models/vgg11/1/model.onnx ]; then
+          echo "Falta /models/vgg11/1/model.onnx. Ejecuta: python serving/export_con_onnx.py";
+          exit 1;
+        fi
+        exec tritonserver --model-repository=/models
 
-      #- --model-control-mode=poll
-      #- --repository-poll-secs=15
-
-
-
-
-#docker compose up
-    
-    
-
+# docker compose -f utils/docker-compose.yml up
