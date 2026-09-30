@@ -1,3 +1,113 @@
+from pathlib import Path
+
+import torch
+import torch.nn as nn
+
+from callbacks.early_stopping import EarlyStopping
+from datasets.cifar10 import get_cifar10_loaders
+from engine.trainer import evaluate, fit
+from models.factory import create_model
+from utils.device import get_device
+from utils.plotting import plot_history
+
+
+def main() -> None:
+    project_root = Path(__file__).resolve().parent
+    data_dir = project_root / "data"
+    artifacts_dir = project_root / "artifacts"
+    weights_path = artifacts_dir / "best_model.pth"
+
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+    batch_size = 32
+    learning_rate = 1e-3
+    weight_decay = 1e-4
+    epochs = 15
+    patience = 3
+    min_delta = 1e-3
+
+    device = get_device()
+    print(f"Training on {device}", flush=True)
+
+    train_loader, val_loader, test_loader = get_cifar10_loaders(
+        data_dir=data_dir,
+        batch_size=batch_size,
+        val_split=0.2,
+        num_workers=0,
+    )
+
+    model = create_model(
+        "vgg11",
+        num_classes=10,
+        pretrained=True,
+    ).to(device)
+
+    criterion = nn.CrossEntropyLoss()
+
+    trainable_parameters = [
+        parameter
+        for parameter in model.parameters()
+        if parameter.requires_grad
+    ]
+
+    optimizer = torch.optim.AdamW(
+        trainable_parameters,
+        lr=learning_rate,
+        weight_decay=weight_decay,
+    )
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.1,
+        patience=2,
+    )
+
+    early_stopping = EarlyStopping(
+        patience=patience,
+        min_delta=min_delta,
+    )
+
+    history = fit(
+        model,
+        train_loader,
+        val_loader,
+        criterion,
+        optimizer,
+        device,
+        epochs,
+        early_stopping,
+        scheduler,
+    )
+
+    model.load_state_dict(early_stopping.best_model_state)
+
+    torch.save(model.state_dict(), weights_path)
+
+    test_loss = evaluate(
+        model,
+        test_loader,
+        criterion,
+        device,
+    )
+
+    print(f"Test Loss: {test_loss:.4f}", flush=True)
+    print(f"Model saved to: {weights_path}", flush=True)
+
+    plot_history(history)
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+#esta es la version anterior que si funcionaba, pero lo vamos a modificar para el proyecto
+"""
 import torch
 import torch.nn as nn
 from pathlib import Path
@@ -339,3 +449,4 @@ if __name__ == "__main__":
 # solo necesito la parte de clasificacion
 # congelo la gran mayoria de mi modelo y solo entreno la parte de clasificacion, 
 # es un modelo que ya esta preentrenado, no tengo que entrenar todo el modelo
+"""

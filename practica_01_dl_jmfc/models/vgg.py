@@ -1,3 +1,34 @@
+import torch.nn as nn
+from torchvision.models import VGG11_Weights, vgg11
+
+from models.base import BaseNN
+
+
+class VGG11(BaseNN):
+    def __init__(self, num_classes=10, pretrained=True):
+        super().__init__(name="vgg11")
+
+        weights = VGG11_Weights.DEFAULT if pretrained else None
+
+        self.network = vgg11(weights=weights)
+
+        for parameter in self.network.features.parameters():
+            parameter.requires_grad = False
+
+        in_features = self.network.classifier[-1].in_features
+
+        self.network.classifier[-1] = nn.Linear(
+            in_features,
+            num_classes,
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
+
+
+##esta es para la version anterior de vgg11
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,10 +49,10 @@ class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
 
         in_features = self.network.classifier[-1].in_features
         self.network.classifier[-1] = nn.Linear(
-            in_features, 
+            in_features,
             num_classes
-        ) 
-        #transfer learning, quitamos la ultima capa y agregamos una nueva 
+        )
+        #transfer learning, quitamos la ultima capa y agregamos una nueva
         # capa de salida con el numero de clases que tenemos
 
 
@@ -47,14 +78,14 @@ class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
         x = x * self.mnist_std + self.mnist_mean  # desnormalizar nlist
         x = x.repeat(1, 3, 1, 1) # capa extra para convertir de 1 canal a 3 canales, porque imagenet es rgb
         x = F.interpolate(
-            x, 
-            size=(224, 224), 
-            mode='bilinear', 
+            x,
+            size=(224, 224),
+            mode='bilinear',
             align_corners=False
             )
         #normalizamos usando la media y desviacion estandar de imagenet
         #esto es obligatorio porque el modelo fue entrenado con imagenet
-        # y si no normalizamos con la media y desviacion estandar de imagenet, 
+        # y si no normalizamos con la media y desviacion estandar de imagenet,
         # el modelo no va a funcionar bien
         x = (x - self.imagenet_mean) / self.imagenet_std
 
@@ -81,7 +112,7 @@ class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
     #necesito que mis datos de entrada esten normzaliados, todo lo que meta a este modelo
     # tiene que estar normalizado
 
-    # transfer learning si requiere que entrnemos, pero solo a ultima capa, 
+    # transfer learning si requiere que entrnemos, pero solo a ultima capa,
     # porque la parte pesada ya esta pre-entrenada
 
 
@@ -92,11 +123,11 @@ class VGG11(BaseNN): #de aqui hasta el comentario de abajo es transfer learning
 
 
     # estandar abierto para redes neuronales
-    # servidor de inferencia TRITON 
-    
-    # versionamiento, podemos guardar el modelo, si tenemos una actualizacion de nuestro modelo, 
+    # servidor de inferencia TRITON
+
+    # versionamiento, podemos guardar el modelo, si tenemos una actualizacion de nuestro modelo,
     # podemos guardar la version anterior y la nueva version
     # SERVIDOR DE INFERENCIA   !!!!!1IMPORTANTE!!!!!!
 
-    
 
+"""

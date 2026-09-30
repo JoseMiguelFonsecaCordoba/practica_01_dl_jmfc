@@ -21,12 +21,18 @@ def main() -> None:
             "Primero ejecuta: python train.py"
         )
 
-    model = create_model("vgg11", pretrained=False).to("cpu")
+    model = create_model("vgg11", num_classes=10, pretrained=False).to("cpu")
     state_dict = torch.load(weights_path, map_location="cpu")
     model.load_state_dict(state_dict)
     model.eval()
 
-    dummy_input = torch.randn(2, 1, 28, 28, dtype=torch.float32)
+    dummy_input = torch.randn(
+        2,
+        3,
+        224,
+        224,
+        dtype=torch.float32,
+    )
 
     torch.onnx.export(
         model,
@@ -39,6 +45,7 @@ def main() -> None:
             "output": {0: "batch_size"},
         },
         opset_version=17,
+        dynamo=False,
     )
 
     onnx_model = onnx.load(str(onnx_output_path))

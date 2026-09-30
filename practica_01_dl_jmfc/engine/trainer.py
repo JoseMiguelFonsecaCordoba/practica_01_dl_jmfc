@@ -88,6 +88,80 @@ def evaluate(
     avg_loss = total_loss/total_samples
     return avg_loss
 
+##fit
+def fit(
+    model,
+    train_loader,
+    val_loader,
+    criterion,
+    optimizer,
+    device,
+    epochs,
+    early_stopping=None,
+    scheduler=None,
+):
+    history = {
+        "train_loss": [],
+        "val_loss": [],
+        "learning_rate": [],
+    }
+
+    for epoch in range(epochs):
+        print(
+            f"Starting epoch {epoch + 1}/{epochs}...",
+            flush=True,
+        )
+
+        current_lr = optimizer.param_groups[0]["lr"]
+
+        train_loss = train_one_epoch(
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device,
+        )
+
+        val_loss = evaluate(
+            model,
+            val_loader,
+            criterion,
+            device,
+        )
+
+        history["train_loss"].append(train_loss)
+        history["val_loss"].append(val_loss)
+        history["learning_rate"].append(current_lr)
+
+        print(
+            f"Epoch {epoch + 1}/{epochs} | "
+            f"Train Loss: {train_loss:.4f} | "
+            f"Validation Loss: {val_loss:.4f} | "
+            f"Learning Rate: {current_lr:.2e}",
+            flush=True,
+        )
+
+        if scheduler is not None:
+            scheduler.step(val_loss)
+
+        if early_stopping is not None:
+            early_stopping(model, val_loss)
+
+            if early_stopping.early_stop:
+                print(
+                    "Early stopping triggered.",
+                    flush=True,
+                )
+                break
+
+    if early_stopping is not None:
+        early_stopping.restore_best_model(model)
+
+    return history
+
+
+#unicamente modifique el fit
+"""
 def fit(
         model,
         train_loader,
@@ -149,3 +223,4 @@ def fit(
 
     return history
 
+"""
