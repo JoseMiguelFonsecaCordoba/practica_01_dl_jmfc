@@ -4,3 +4,6 @@ onnx
 onnxscript
 onnxruntime
 matplotlib
+fastapi
+uvicorn
+python-multipart
