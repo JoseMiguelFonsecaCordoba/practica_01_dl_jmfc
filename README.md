@@ -391,3 +391,60 @@ Usuario
 ```
 
 Si Triton no está disponible, la aplicación mostrará un mensaje indicando el error de conexión.
+
+
+## Servidor web accesible por red local
+
+El proyecto incluye un servidor web que permite enviar imágenes al modelo de inferencia desde otros equipos conectados a la misma red local.
+
+### Iniciar Triton
+
+En una terminal:
+
+```bash
+cd ~/practica_01_dl_jmfc
+
+docker compose -f practica_01_dl_jmfc/utils/docker-compose.yml up
+```
+
+### Iniciar el servidor web
+
+En otra terminal:
+
+```bash
+cd ~/practica_01_dl_jmfc/practica_01_dl_jmfc
+source ../.venv/bin/activate
+
+uvicorn web_server:app --host 0.0.0.0 --port 5000
+```
+
+### Acceder desde otro equipo
+
+Consulta la dirección IPv4 de la computadora que ejecuta el servidor:
+
+```powershell
+ipconfig
+```
+
+Por ejemplo:
+
+```text
+192.168.1.75
+```
+
+Los demás equipos deben abrir en su navegador:
+
+```text
+http://192.168.1.75:5000
+```
+
+Desde la página pueden seleccionar una imagen y pulsar `Clasificar imagen`.
+
+El servidor devuelve:
+
+- Clase predicha.
+- Índice de clase.
+- Confianza.
+- Latencia de inferencia.
+
+La computadora que ejecuta el servidor debe permanecer conectada a la misma red local y mantener activos Triton y el servidor web.
