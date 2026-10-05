@@ -341,3 +341,53 @@ El tiempo del agente incluye además:
 - Cálculo de softmax.
 
 Por eso los tiempos no deben compararse directamente sin indicar qué parte del flujo se está midiendo.
+
+## Interfaz gráfica
+
+El proyecto incluye una interfaz gráfica en:
+
+```text
+practica_01_dl_jmfc/app.py
+```
+
+La interfaz permite:
+
+- Seleccionar una imagen local.
+- Mostrar una vista previa.
+- Enviar la imagen al agente de inferencia.
+- Mostrar la clase predicha.
+- Mostrar la confianza.
+- Mostrar la latencia de la petición.
+
+Antes de ejecutar la aplicación, Triton debe estar activo:
+
+```bash
+docker compose -f practica_01_dl_jmfc/utils/docker-compose.yml up
+```
+
+En otra terminal, ejecuta:
+
+```bash
+cd practica_01_dl_jmfc
+python app.py
+```
+
+Después:
+
+1. Pulsa `Seleccionar imagen`.
+2. Elige una imagen `.png`, `.jpg`, `.jpeg` o `.bmp`.
+3. Pulsa `Clasificar imagen`.
+4. Revisa la predicción, confianza y latencia.
+
+El flujo de la aplicación es:
+
+```text
+Usuario
+  -> interfaz gráfica
+  -> InferenceAgent
+  -> Triton
+  -> VGG11
+  -> resultado mostrado en pantalla
+```
+
+Si Triton no está disponible, la aplicación mostrará un mensaje indicando el error de conexión.
