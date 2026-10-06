@@ -1,0 +1,8 @@
+=== Triton ===
+HTTP/1.1 200 OK
+Content-Length: 0
+Content-Type: text/plain
+
+
+=== FastAPI ===
+{"status":"ok","service":"cifar10-inference-server"}
