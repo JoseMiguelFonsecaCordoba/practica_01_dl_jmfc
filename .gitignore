@@ -8,3 +8,15 @@ practica_01_dl_jmfc/data/
 practica_01_dl_jmfc/samples/
 
 README_2.md
+
+# Detection runtime artifacts
+practica_01_dl_jmfc/artifacts/*.pth
+practica_01_dl_jmfc/reports/*.txt
+practica_01_dl_jmfc/reports/*.html
+practica_01_dl_jmfc/reports/detection_result.jpg
+practica_01_dl_jmfc/reports/input_bicis.jpg
+practica_01_dl_jmfc/reports/docker_detection_result.html
+practica_01_dl_jmfc/__pycache__/
+practica_01_dl_jmfc/agent/__pycache__/
+practica_01_dl_jmfc/models/__pycache__/
+practica_01_dl_jmfc/utils/__pycache__/
