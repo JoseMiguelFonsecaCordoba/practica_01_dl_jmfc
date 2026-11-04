@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from pathlib import Path
 
 import mlflow
@@ -49,11 +50,14 @@ def main():
     parser.add_argument("--artifacts-dir", default="forecasting/artifacts")
     parser.add_argument("--data-dir", default="forecasting/data")
     parser.add_argument("--output-dir", default="forecasting/reports")
-    parser.add_argument("--mlruns-dir", default="mlruns")
+    parser.add_argument(
+        "--tracking-uri",
+        default=os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"),
+    )
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args()
     device = torch.device(args.device)
-    mlflow.set_tracking_uri(Path(args.mlruns_dir).resolve().as_uri())
+    mlflow.set_tracking_uri(args.tracking_uri)
     loaders = get_jena_loaders(args.data_dir)
     test_loader = loaders[2]
     output_dir = Path(args.output_dir)

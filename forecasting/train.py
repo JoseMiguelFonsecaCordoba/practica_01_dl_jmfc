@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import random
 from pathlib import Path
 
@@ -128,7 +129,10 @@ def parse_args():
     parser.add_argument("--models", nargs="+", choices=("rnn", "lstm"), default=("rnn", "lstm"))
     parser.add_argument("--data-dir", default=str(ROOT / "data"))
     parser.add_argument("--artifacts-dir", default=str(ROOT / "artifacts"))
-    parser.add_argument("--mlruns-dir", default=str(ROOT.parent / "mlruns"))
+    parser.add_argument(
+        "--tracking-uri",
+        default=os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"),
+    )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--sequence-length", type=int, default=24)
@@ -142,7 +146,7 @@ def parse_args():
 def main():
     args = parse_args()
     set_seed(args.seed)
-    mlflow.set_tracking_uri(Path(args.mlruns_dir).resolve().as_uri())
+    mlflow.set_tracking_uri(args.tracking_uri)
     mlflow.set_experiment("jena-temperature-forecasting")
     device = resolve_device(args.device)
     loaders = get_jena_loaders(

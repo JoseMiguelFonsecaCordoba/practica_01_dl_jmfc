@@ -4,12 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile.forecasting
     environment:
-      MLFLOW_TRACKING_URI: file:///workspace/mlruns
+      MLFLOW_TRACKING_URI: sqlite:////workspace/mlflow.db
       PYTHONUNBUFFERED: "1"
     volumes:
       - ./forecasting/data:/workspace/forecasting/data
       - ./forecasting/artifacts:/workspace/forecasting/artifacts
-      - ./mlruns:/workspace/mlruns
+      - ./mlflow.db:/workspace/mlflow.db
     command:
       - python
       - -m

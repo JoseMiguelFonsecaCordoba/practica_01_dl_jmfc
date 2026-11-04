@@ -29,3 +29,5 @@ forecasting/artifacts/*.json
 forecasting/reports/*.png
 forecasting/reports/*.json
 mlruns/
+mlflow.db
+mlflow.db-*
