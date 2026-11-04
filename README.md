@@ -30,11 +30,12 @@ docker compose \
   run --rm forecasting-train
 ```
 
-MLflow utiliza una base de datos SQLite persistente en `mlflow.db` y puede
+MLflow utiliza una base de datos SQLite persistente en
+`mlflow-data/mlflow.db` y puede
 visualizarse con:
 
 ```bash
-mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5003
+mlflow ui --backend-store-uri sqlite:///mlflow-data/mlflow.db --port 5003
 ```
 
 ### Evaluación y servidor de inferencia

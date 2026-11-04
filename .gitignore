@@ -31,3 +31,4 @@ forecasting/reports/*.json
 mlruns/
 mlflow.db
 mlflow.db-*
+mlflow-data/
