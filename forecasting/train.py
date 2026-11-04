@@ -107,6 +107,7 @@ def train_model(args, model_name, loaders, mean, std, device):
             model,
             "model",
             input_example=input_example,
+            serialization_format="pickle",
         )
         run_id = mlflow.active_run().info.run_id
 
