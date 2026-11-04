@@ -1,5 +1,6 @@
 services:
   forecasting-train:
+    user: "${UID:-1000}:${GID:-1000}"
     build:
       context: .
       dockerfile: Dockerfile.forecasting
@@ -19,6 +20,7 @@ services:
       - lstm
 
   forecasting-inference:
+    user: "${UID:-1000}:${GID:-1000}"
     build:
       context: .
       dockerfile: Dockerfile.forecasting

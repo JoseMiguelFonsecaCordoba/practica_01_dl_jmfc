@@ -52,7 +52,10 @@ def main():
     parser.add_argument("--output-dir", default="forecasting/reports")
     parser.add_argument(
         "--tracking-uri",
-        default=os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"),
+        default=os.getenv(
+            "MLFLOW_TRACKING_URI",
+            "sqlite:///mlflow-data/mlflow.db",
+        ),
     )
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args()

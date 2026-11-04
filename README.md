@@ -14,6 +14,13 @@ python -m pip install -r requirements.txt
 python -m pip install -r forecasting/requirements.txt
 ```
 
+Antes de ejecutar el entrenamiento por primera vez, crea las carpetas
+persistentes con el usuario actual:
+
+```bash
+mkdir -p forecasting/data forecasting/artifacts mlflow-data
+```
+
 ### Entrenamiento en contenedor
 
 ```bash
