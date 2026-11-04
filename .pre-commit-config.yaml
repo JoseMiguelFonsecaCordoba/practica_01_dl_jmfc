@@ -11,7 +11,11 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-yaml
+        files: ^(forecasting/|docker-compose\.forecasting.*\.yml$|\.pre-commit-config\.yaml$)
       - id: end-of-file-fixer
+        files: ^(forecasting/|README\.md$|Dockerfile\.forecasting$|docker-compose\.forecasting.*\.yml$|\.pre-commit-config\.yaml$|pytest\.ini$)
       - id: trailing-whitespace
+        files: ^(forecasting/|README\.md$|Dockerfile\.forecasting$|docker-compose\.forecasting.*\.yml$|\.pre-commit-config\.yaml$|pytest\.ini$)
       - id: check-added-large-files
         args: [--maxkb=10000]
+        files: ^(forecasting/|Dockerfile\.forecasting$|docker-compose\.forecasting.*\.yml$|\.pre-commit-config\.yaml$|pytest\.ini$)
