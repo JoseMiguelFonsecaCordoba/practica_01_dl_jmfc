@@ -1,0 +1,14 @@
+services:
+  forecasting-train:
+    gpus: all
+    environment:
+      DEVICE: cuda
+    command:
+      - python
+      - -m
+      - forecasting.train
+      - --models
+      - rnn
+      - lstm
+      - --device
+      - cuda

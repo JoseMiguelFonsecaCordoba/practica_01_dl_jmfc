@@ -1,0 +1,7 @@
+mlflow
+numpy
+matplotlib
+fastapi
+uvicorn
+pydantic
+pytest

@@ -1,0 +1,12 @@
+FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
+
+WORKDIR /workspace
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/workspace
+
+COPY forecasting/requirements.txt /tmp/forecasting-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/forecasting-requirements.txt
+
+COPY forecasting /workspace/forecasting
+
+CMD ["python", "-m", "forecasting.train", "--models", "rnn", "lstm"]

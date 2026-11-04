@@ -1,0 +1,38 @@
+services:
+  forecasting-train:
+    build:
+      context: .
+      dockerfile: Dockerfile.forecasting
+    environment:
+      MLFLOW_TRACKING_URI: file:///workspace/mlruns
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./forecasting/data:/workspace/forecasting/data
+      - ./forecasting/artifacts:/workspace/forecasting/artifacts
+      - ./mlruns:/workspace/mlruns
+    command:
+      - python
+      - -m
+      - forecasting.train
+      - --models
+      - rnn
+      - lstm
+
+  forecasting-inference:
+    build:
+      context: .
+      dockerfile: Dockerfile.forecasting
+    environment:
+      MODEL_PATH: /workspace/forecasting/artifacts/best_model.pt
+      DEVICE: cpu
+    ports:
+      - "5002:8000"
+    volumes:
+      - ./forecasting/artifacts:/workspace/forecasting/artifacts:ro
+    command:
+      - uvicorn
+      - forecasting.inference_server:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"

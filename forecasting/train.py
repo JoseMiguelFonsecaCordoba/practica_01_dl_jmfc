@@ -1,0 +1,168 @@
+import argparse
+import json
+import random
+from pathlib import Path
+
+import mlflow
+import mlflow.pytorch
+import numpy as np
+import torch
+from torch import nn
+
+from forecasting.data.series import get_jena_loaders
+from forecasting.models import LSTMForecaster, RNNForecaster
+
+
+ROOT = Path(__file__).resolve().parent
+MODEL_CLASSES = {"rnn": RNNForecaster, "lstm": LSTMForecaster}
+
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def resolve_device(requested):
+    if requested == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA was requested but is not available")
+    if requested == "auto":
+        requested = "cuda" if torch.cuda.is_available() else "cpu"
+    return torch.device(requested)
+
+
+def run_epoch(model, loader, criterion, device, optimizer=None):
+    training = optimizer is not None
+    model.train(training)
+    total_loss = 0.0
+    count = 0
+    for features, targets in loader:
+        features, targets = features.to(device), targets.to(device)
+        if training:
+            optimizer.zero_grad(set_to_none=True)
+        predictions = model(features)
+        loss = criterion(predictions, targets)
+        if training:
+            loss.backward()
+            optimizer.step()
+        batch_size = features.size(0)
+        total_loss += loss.item() * batch_size
+        count += batch_size
+    return total_loss / max(count, 1)
+
+
+def train_model(args, model_name, loaders, mean, std, device):
+    train_loader, val_loader, _, _, _ = loaders
+    model = MODEL_CLASSES[model_name](
+        input_size=1,
+        hidden_size=args.hidden_size,
+        output_size=1,
+    ).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    criterion = nn.MSELoss()
+    best_val_loss = float("inf")
+    best_state = None
+
+    with mlflow.start_run(run_name=model_name):
+        mlflow.log_params(
+            {
+                "model": model_name,
+                "sequence_length": args.sequence_length,
+                "hidden_size": args.hidden_size,
+                "batch_size": args.batch_size,
+                "learning_rate": args.learning_rate,
+                "epochs": args.epochs,
+                "device": str(device),
+                "normalization_mean": mean,
+                "normalization_std": std,
+            }
+        )
+        for epoch in range(1, args.epochs + 1):
+            train_loss = run_epoch(model, train_loader, criterion, device, optimizer)
+            with torch.no_grad():
+                val_loss = run_epoch(model, val_loader, criterion, device)
+            mlflow.log_metrics(
+                {"train_loss": train_loss, "val_loss": val_loss},
+                step=epoch,
+            )
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_state = {
+                    key: value.detach().cpu().clone()
+                    for key, value in model.state_dict().items()
+                }
+
+        model.load_state_dict(best_state)
+        mlflow.log_metric("best_val_loss", best_val_loss)
+        mlflow.pytorch.log_model(model, "model")
+        run_id = mlflow.active_run().info.run_id
+
+    output_dir = Path(args.artifacts_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = output_dir / f"{model_name}_best.pt"
+    torch.save(
+        {
+            "model_name": model_name,
+            "state_dict": best_state,
+            "hidden_size": args.hidden_size,
+            "sequence_length": args.sequence_length,
+            "mean": mean,
+            "std": std,
+            "val_loss": best_val_loss,
+            "run_id": run_id,
+        },
+        checkpoint_path,
+    )
+    return {
+        "model": model_name,
+        "val_loss": best_val_loss,
+        "checkpoint": checkpoint_path.name,
+        "run_id": run_id,
+    }
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train RNN and LSTM with MLflow")
+    parser.add_argument("--models", nargs="+", choices=("rnn", "lstm"), default=("rnn", "lstm"))
+    parser.add_argument("--data-dir", default=str(ROOT / "data"))
+    parser.add_argument("--artifacts-dir", default=str(ROOT / "artifacts"))
+    parser.add_argument("--mlruns-dir", default=str(ROOT.parent / "mlruns"))
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--sequence-length", type=int, default=24)
+    parser.add_argument("--hidden-size", type=int, default=32)
+    parser.add_argument("--learning-rate", type=float, default=1e-3)
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    parser.add_argument("--seed", type=int, default=42)
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    set_seed(args.seed)
+    mlflow.set_tracking_uri(Path(args.mlruns_dir).resolve().as_uri())
+    mlflow.set_experiment("jena-temperature-forecasting")
+    device = resolve_device(args.device)
+    loaders = get_jena_loaders(
+        args.data_dir,
+        batch_size=args.batch_size,
+        sequence_length=args.sequence_length,
+    )
+    mean, std = loaders[-2:]
+    results = [
+        train_model(args, name, loaders, mean, std, device)
+        for name in args.models
+    ]
+    best = min(results, key=lambda result: result["val_loss"])
+    output_dir = Path(args.artifacts_dir)
+    (output_dir / "model_metadata.json").write_text(
+        json.dumps({"best": best, "results": results}, indent=2),
+        encoding="utf-8",
+    )
+    print(json.dumps({"best_model": best, "results": results}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,65 @@
 # practica_01_dl_jmfc
 
+## Nueva fase: forecasting con RNN, LSTM y MLflow
+
+La carpeta `forecasting/` implementa forecasting de temperatura con el dataset
+Jena Climate. El pipeline compara una RNN y una LSTM con el mismo
+preprocesamiento, registra cada entrenamiento y sus métricas en MLflow,
+selecciona el menor `val_loss` y expone el mejor checkpoint mediante FastAPI.
+
+Para ejecutar los comandos locales de esta fase, instala sus dependencias:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install -r forecasting/requirements.txt
+```
+
+### Entrenamiento en contenedor
+
+```bash
+docker compose -f docker-compose.forecasting.yml run --rm forecasting-train
+python -m forecasting.select_best
+```
+
+Para usar GPU NVIDIA:
+
+```bash
+docker compose \
+  -f docker-compose.forecasting.yml \
+  -f docker-compose.forecasting.gpu.yml \
+  run --rm forecasting-train
+```
+
+MLflow puede visualizarse con:
+
+```bash
+mlflow ui --backend-store-uri ./mlruns --port 5003
+```
+
+### Evaluación y servidor de inferencia
+
+```bash
+python -m forecasting.evaluate
+docker compose -f docker-compose.forecasting.yml up forecasting-inference
+curl http://127.0.0.1:5002/health
+```
+
+El endpoint `POST /predict` recibe exactamente 24 temperaturas horarias:
+
+```bash
+curl -X POST http://127.0.0.1:5002/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"values":[10,11,12,13,14,15,16,17,18,19,20,19,18,17,16,15,14,13,12,11,10,9,10,11]}'
+```
+
+### Validación antes de commit
+
+```bash
+pre-commit install
+pre-commit run --all-files
+pytest forecasting/tests
+```
+
 Proyecto de clasificación de imágenes CIFAR-10 utilizando **VGG11 + Transfer Learning**, exportación a ONNX, servidor de inferencia Triton y un agente HTTP reutilizable.
 
 Flujo principal:

@@ -20,3 +20,12 @@ practica_01_dl_jmfc/__pycache__/
 practica_01_dl_jmfc/agent/__pycache__/
 practica_01_dl_jmfc/models/__pycache__/
 practica_01_dl_jmfc/utils/__pycache__/
+
+# Forecasting runtime artifacts
+forecasting/data/*.csv
+forecasting/data/*.zip
+forecasting/artifacts/*.pt
+forecasting/artifacts/*.json
+forecasting/reports/*.png
+forecasting/reports/*.json
+mlruns/
