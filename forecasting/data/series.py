@@ -76,6 +76,7 @@ def get_jena_loaders(
 
     def normalize(split):
         return (split - mean) / std
+
     datasets = [
         SequenceDataset(normalize(split), sequence_length)
         for split in (train_values, val_values, test_values)

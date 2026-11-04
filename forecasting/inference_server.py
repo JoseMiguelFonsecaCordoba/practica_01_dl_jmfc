@@ -10,7 +10,9 @@ from forecasting.models import LSTMForecaster, RNNForecaster
 
 MODEL_CLASSES = {"rnn": RNNForecaster, "lstm": LSTMForecaster}
 MODEL_PATH = Path(os.getenv("MODEL_PATH", "forecasting/artifacts/best_model.pt"))
-DEVICE = torch.device("cuda" if torch.cuda.is_available() and os.getenv("DEVICE") == "cuda" else "cpu")
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() and os.getenv("DEVICE") == "cuda" else "cpu"
+)
 
 
 class ForecastRequest(BaseModel):

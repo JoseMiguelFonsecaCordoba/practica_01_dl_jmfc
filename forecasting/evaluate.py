@@ -30,9 +30,7 @@ def evaluate_checkpoint(checkpoint_path, test_loader, device):
     with torch.no_grad():
         for features, batch_targets in test_loader:
             batch_predictions = model(features.to(device))
-            losses.append(
-                criterion(batch_predictions, batch_targets.to(device)).item()
-            )
+            losses.append(criterion(batch_predictions, batch_targets.to(device)).item())
             targets.extend(batch_targets.squeeze(-1).cpu().numpy())
             predictions.extend(batch_predictions.squeeze(-1).cpu().numpy())
     return {

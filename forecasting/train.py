@@ -137,7 +137,9 @@ def train_model(args, model_name, loaders, mean, std, device):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train RNN and LSTM with MLflow")
-    parser.add_argument("--models", nargs="+", choices=("rnn", "lstm"), default=("rnn", "lstm"))
+    parser.add_argument(
+        "--models", nargs="+", choices=("rnn", "lstm"), default=("rnn", "lstm")
+    )
     parser.add_argument("--data-dir", default=str(ROOT / "data"))
     parser.add_argument("--artifacts-dir", default=str(ROOT / "artifacts"))
     parser.add_argument(
@@ -167,8 +169,7 @@ def main():
     )
     mean, std = loaders[-2:]
     results = [
-        train_model(args, name, loaders, mean, std, device)
-        for name in args.models
+        train_model(args, name, loaders, mean, std, device) for name in args.models
     ]
     best = min(results, key=lambda result: result["val_loss"])
     output_dir = Path(args.artifacts_dir)
