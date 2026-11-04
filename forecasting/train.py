@@ -97,7 +97,17 @@ def train_model(args, model_name, loaders, mean, std, device):
 
         model.load_state_dict(best_state)
         mlflow.log_metric("best_val_loss", best_val_loss)
-        mlflow.pytorch.log_model(model, "model")
+        input_example = torch.zeros(
+            1,
+            args.sequence_length,
+            1,
+            dtype=torch.float32,
+        )
+        mlflow.pytorch.log_model(
+            model,
+            "model",
+            input_example=input_example,
+        )
         run_id = mlflow.active_run().info.run_id
 
     output_dir = Path(args.artifacts_dir)
