@@ -19,6 +19,7 @@ persistentes con el usuario actual:
 
 ```bash
 mkdir -p forecasting/data forecasting/artifacts mlflow-data
+mkdir -p mlruns
 ```
 
 ### Entrenamiento en contenedor

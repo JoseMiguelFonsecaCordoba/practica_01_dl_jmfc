@@ -11,6 +11,7 @@ services:
       - ./forecasting/data:/workspace/forecasting/data
       - ./forecasting/artifacts:/workspace/forecasting/artifacts
       - ./mlflow-data:/workspace/mlflow-data
+      - ./mlruns:/workspace/mlruns
     command:
       - python
       - -m
