@@ -1,4 +1,5 @@
 mlflow
+dvc
 numpy
 matplotlib
 fastapi

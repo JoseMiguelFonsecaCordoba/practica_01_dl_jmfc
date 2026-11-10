@@ -32,3 +32,7 @@ mlruns/
 mlflow.db
 mlflow.db-*
 mlflow-data/
+
+# DVC cache and generated metadata
+.dvc/cache/
+.dvc/tmp/

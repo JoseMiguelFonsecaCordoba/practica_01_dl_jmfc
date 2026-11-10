@@ -1,0 +1,20 @@
+stages:
+  prepare-data:
+    cmd: python -m forecasting.data.prepare --data-dir forecasting/data
+    deps:
+      - forecasting/data/prepare.py
+    outs:
+      - forecasting/data/jena_climate_2009_2016.csv
+
+  train:
+    cmd: >-
+      docker compose -f docker-compose.forecasting.yml
+      -f docker-compose.forecasting.gpu.yml
+      run --rm forecasting-train
+    deps:
+      - forecasting/data/jena_climate_2009_2016.csv
+      - forecasting/train.py
+      - forecasting/models/lstm.py
+      - forecasting/models/rnn.py
+    outs:
+      - forecasting/artifacts

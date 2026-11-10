@@ -1,0 +1,4 @@
+# DVC local state
+config.local
+cache
+tmp
