@@ -8,5 +8,6 @@ COPY forecasting/requirements.txt /tmp/forecasting-requirements.txt
 RUN pip install --no-cache-dir -r /tmp/forecasting-requirements.txt
 
 COPY forecasting /workspace/forecasting
+RUN chmod +x /workspace/forecasting/docker_train.sh
 
 CMD ["python", "-m", "forecasting.train", "--models", "rnn", "lstm"]

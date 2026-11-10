@@ -55,7 +55,9 @@ mkdir -p mlflow-data
 mkdir -p mlruns
 ```
 
-Antes de ejecutar Docker, exporta el UID y GID reales de tu usuario WSL:
+Antes de ejecutar Docker, exporta el UID y GID reales de tu usuario WSL.
+El contenedor de entrenamiento usa estos valores para devolver los archivos
+generados a tu usuario al terminar:
 
 ```bash
 export HOST_UID="$(id -u)"

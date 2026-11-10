@@ -4,9 +4,7 @@ services:
     environment:
       DEVICE: cuda
     command:
-      - python
-      - -m
-      - forecasting.train
+      - /workspace/forecasting/docker_train.sh
       - --models
       - rnn
       - lstm
