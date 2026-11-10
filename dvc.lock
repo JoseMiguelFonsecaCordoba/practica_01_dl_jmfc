@@ -12,3 +12,29 @@ stages:
       hash: md5
       md5: 959915f05bfafef18e471a97ae679535
       size: 43164220
+  train:
+    cmd: docker compose -f docker-compose.forecasting.yml -f 
+      docker-compose.forecasting.gpu.yml run --rm forecasting-train
+    deps:
+    - path: forecasting/data/jena_climate_2009_2016.csv
+      hash: md5
+      md5: 959915f05bfafef18e471a97ae679535
+      size: 43164220
+    - path: forecasting/models/lstm.py
+      hash: md5
+      md5: b2034920dcdf6bfe3aaa872b06d0b41e
+      size: 405
+    - path: forecasting/models/rnn.py
+      hash: md5
+      md5: 8d0674f469c5f2043b628854413e5ae4
+      size: 401
+    - path: forecasting/train.py
+      hash: md5
+      md5: e243002990b18c032c2a6f52d5009cd6
+      size: 6035
+    outs:
+    - path: forecasting/artifacts
+      hash: md5
+      md5: f27cf1db338a6cb7d22c7a55cfd6d536.dir
+      size: 28582
+      nfiles: 3
