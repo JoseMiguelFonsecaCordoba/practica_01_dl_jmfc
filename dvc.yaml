@@ -17,4 +17,16 @@ stages:
       - forecasting/models/lstm.py
       - forecasting/models/rnn.py
     outs:
-      - forecasting/artifacts
+      - forecasting/artifacts/lstm_best.pt
+      - forecasting/artifacts/model_metadata.json
+      - forecasting/artifacts/rnn_best.pt
+
+  select-best:
+    cmd: python -m forecasting.select_best
+    deps:
+      - forecasting/artifacts/lstm_best.pt
+      - forecasting/artifacts/model_metadata.json
+      - forecasting/artifacts/rnn_best.pt
+      - forecasting/select_best.py
+    outs:
+      - forecasting/artifacts/best_model.pt
