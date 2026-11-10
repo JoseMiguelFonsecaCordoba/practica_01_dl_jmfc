@@ -432,7 +432,27 @@ mlruns/
 
 Estos archivos están excluidos mediante `.gitignore`.
 
-## 17. Problemas frecuentes
+## 17. Verificación automática en GitHub
+
+El repositorio contiene el workflow:
+
+```text
+.github/workflows/forecasting-ci.yml
+```
+
+GitHub Actions lo ejecuta automáticamente en cada `push` a `main` y en cada
+Pull Request hacia `main`. El workflow:
+
+- instala Python y las dependencias;
+- ejecuta las pruebas unitarias;
+- comprueba la sintaxis de `forecasting/`;
+- ejecuta `pre-commit`.
+
+El workflow valida el código, pero no entrena modelos ni requiere GPU.
+Después de hacer `git push`, el resultado puede consultarse en la pestaña
+`Actions` del repositorio de GitHub.
+
+## 18. Problemas frecuentes
 
 ### `ModuleNotFoundError: No module named 'forecasting'`
 
