@@ -33,8 +33,39 @@ stages:
       md5: e243002990b18c032c2a6f52d5009cd6
       size: 6035
     outs:
-    - path: forecasting/artifacts
+    - path: forecasting/artifacts/lstm_best.pt
       hash: md5
-      md5: f27cf1db338a6cb7d22c7a55cfd6d536.dir
-      size: 28582
-      nfiles: 3
+      md5: de748bc766b7cc048f6c903effbac2e3
+      size: 20764
+    - path: forecasting/artifacts/model_metadata.json
+      hash: md5
+      md5: d3d96236cefbb9788e0c53e91fcaafbe
+      size: 504
+    - path: forecasting/artifacts/rnn_best.pt
+      hash: md5
+      md5: 2ed114abe6dad7687823747db9944b25
+      size: 7314
+  select-best:
+    cmd: python -m forecasting.select_best
+    deps:
+    - path: forecasting/artifacts/lstm_best.pt
+      hash: md5
+      md5: de748bc766b7cc048f6c903effbac2e3
+      size: 20764
+    - path: forecasting/artifacts/model_metadata.json
+      hash: md5
+      md5: d3d96236cefbb9788e0c53e91fcaafbe
+      size: 504
+    - path: forecasting/artifacts/rnn_best.pt
+      hash: md5
+      md5: 2ed114abe6dad7687823747db9944b25
+      size: 7314
+    - path: forecasting/select_best.py
+      hash: md5
+      md5: 9a246f6702f743d994c994a3025e2dd0
+      size: 646
+    outs:
+    - path: forecasting/artifacts/best_model.pt
+      hash: md5
+      md5: de748bc766b7cc048f6c903effbac2e3
+      size: 20764
