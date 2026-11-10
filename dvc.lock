@@ -1,0 +1,14 @@
+schema: '2.0'
+stages:
+  prepare-data:
+    cmd: python -m forecasting.data.prepare --data-dir forecasting/data
+    deps:
+    - path: forecasting/data/prepare.py
+      hash: md5
+      md5: a6bfb9eb6fbfd4be514344036f5ca3be
+      size: 380
+    outs:
+    - path: forecasting/data/jena_climate_2009_2016.csv
+      hash: md5
+      md5: 959915f05bfafef18e471a97ae679535
+      size: 43164220
