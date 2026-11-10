@@ -55,6 +55,19 @@ mkdir -p mlflow-data
 mkdir -p mlruns
 ```
 
+Antes de ejecutar Docker, exporta el UID y GID reales de tu usuario WSL:
+
+```bash
+export HOST_UID="$(id -u)"
+export HOST_GID="$(id -g)"
+```
+
+Puedes comprobarlos con:
+
+```bash
+echo "$HOST_UID:$HOST_GID"
+```
+
 Si Docker creó archivos como `root`, corrige sus permisos:
 
 ```bash
