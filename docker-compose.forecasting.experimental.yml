@@ -20,4 +20,4 @@ services:
       - --experiment-name
       - "jena-temperature-forecasting-experiments"
       - --artifacts-dir
-      - /workspace/forecasting/experimental-artifacts
+      - /workspace/forecasting/artifacts

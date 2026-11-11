@@ -268,8 +268,14 @@ mejor desempeño sobre el conjunto de prueba.
 
 ## 11. Ejecutar un experimento de mejora
 
-La baseline utiliza 10 épocas y `hidden_size=32`. Para probar una
-configuración más grande sin cambiar la definición DVC de la baseline:
+La configuración oficial reproducible utiliza 40 épocas como máximo,
+`hidden_size=64` y early stopping. Para reproducirla mediante DVC:
+
+```bash
+dvc repro
+```
+
+Para ejecutar manualmente la misma configuración:
 
 ```bash
 docker compose \
@@ -294,10 +300,11 @@ El experimento se registra en MLflow con el nombre:
 jena-temperature-forecasting-experiments
 ```
 
-No sustituyas la baseline hasta comparar el `test_rmse_celsius` del
-experimento con `forecasting/reports/evaluation.json`.
+La configuración anterior queda como referencia histórica en MLflow; la
+configuración experimental pasa a ser la versión oficial solo después de
+ejecutar `dvc repro` y comparar el `test_rmse_celsius`.
 
-Los checkpoints experimentales se guardan separadamente en:
+Los experimentos exploratorios pueden guardarse separadamente en:
 
 ```text
 forecasting/experimental-artifacts/
