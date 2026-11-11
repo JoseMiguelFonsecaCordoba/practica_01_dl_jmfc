@@ -7,6 +7,7 @@ host_gid="${HOST_GID:-1000}"
 cleanup() {
     chown -R "${host_uid}:${host_gid}" \
         /workspace/forecasting/artifacts \
+        /workspace/forecasting/experimental-artifacts \
         /workspace/forecasting/data \
         /workspace/mlflow-data \
         /workspace/mlruns

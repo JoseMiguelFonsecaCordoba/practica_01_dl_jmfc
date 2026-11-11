@@ -266,7 +266,52 @@ cat forecasting/reports/evaluation.json
 La métrica principal es `test_rmse_celsius`. El menor valor representa el
 mejor desempeño sobre el conjunto de prueba.
 
-## 11. Levantar el servidor de inferencia
+## 11. Ejecutar un experimento de mejora
+
+La baseline utiliza 10 épocas y `hidden_size=32`. Para probar una
+configuración más grande sin cambiar la definición DVC de la baseline:
+
+```bash
+docker compose \
+  -f docker-compose.forecasting.yml \
+  -f docker-compose.forecasting.gpu.yml \
+  -f docker-compose.forecasting.experimental.yml \
+  run --rm forecasting-train
+```
+
+Esta configuración usa:
+
+```text
+40 épocas como máximo
+hidden_size=64
+learning_rate=0.0005
+early stopping con paciencia 5
+```
+
+El experimento se registra en MLflow con el nombre:
+
+```text
+jena-temperature-forecasting-experiments
+```
+
+No sustituyas la baseline hasta comparar el `test_rmse_celsius` del
+experimento con `forecasting/reports/evaluation.json`.
+
+Los checkpoints experimentales se guardan separadamente en:
+
+```text
+forecasting/experimental-artifacts/
+```
+
+Para evaluarlos:
+
+```bash
+python -m forecasting.evaluate \
+  --artifacts-dir forecasting/experimental-artifacts \
+  --output-dir forecasting/reports/experimental
+```
+
+## 12. Levantar el servidor de inferencia
 
 El servidor usa el archivo:
 
@@ -307,7 +352,7 @@ Respuesta esperada:
 }
 ```
 
-## 12. Probar una predicción
+## 13. Probar una predicción
 
 El endpoint requiere exactamente 24 temperaturas:
 
@@ -343,7 +388,7 @@ docker compose \
   logs -f forecasting-inference
 ```
 
-## 13. Detener los contenedores
+## 14. Detener los contenedores
 
 Detener el servidor de inferencia:
 

@@ -26,8 +26,11 @@ forecasting/data/*.csv
 forecasting/data/*.zip
 forecasting/artifacts/*.pt
 forecasting/artifacts/*.json
+forecasting/experimental-artifacts/
 forecasting/reports/*.png
 forecasting/reports/*.json
+forecasting/reports/**/*.png
+forecasting/reports/**/*.json
 mlruns/
 mlflow.db
 mlflow.db-*

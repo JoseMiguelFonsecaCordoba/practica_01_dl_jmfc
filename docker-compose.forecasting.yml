@@ -12,6 +12,7 @@ services:
     volumes:
       - ./forecasting/data:/workspace/forecasting/data
       - ./forecasting/artifacts:/workspace/forecasting/artifacts
+      - ./forecasting/experimental-artifacts:/workspace/forecasting/experimental-artifacts
       - ./mlflow-data:/workspace/mlflow-data
       - ./mlruns:/workspace/mlruns
     command:

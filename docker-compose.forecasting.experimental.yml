@@ -1,0 +1,23 @@
+services:
+  forecasting-train:
+    command:
+      - /workspace/forecasting/docker_train.sh
+      - --models
+      - rnn
+      - lstm
+      - --device
+      - cuda
+      - --epochs
+      - "40"
+      - --hidden-size
+      - "64"
+      - --learning-rate
+      - "0.0005"
+      - --patience
+      - "5"
+      - --run-name-suffix
+      - "hidden64-lr5e4"
+      - --experiment-name
+      - "jena-temperature-forecasting-experiments"
+      - --artifacts-dir
+      - /workspace/forecasting/experimental-artifacts

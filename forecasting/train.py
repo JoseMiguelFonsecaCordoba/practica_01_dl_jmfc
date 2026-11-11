@@ -65,8 +65,11 @@ def train_model(args, model_name, loaders, mean, std, device):
     criterion = nn.MSELoss()
     best_val_loss = float("inf")
     best_state = None
+    epochs_without_improvement = 0
 
-    with mlflow.start_run(run_name=model_name):
+    with mlflow.start_run(
+        run_name=f"{model_name}-{args.run_name_suffix}"
+    ):
         mlflow.log_params(
             {
                 "model": model_name,
@@ -75,6 +78,8 @@ def train_model(args, model_name, loaders, mean, std, device):
                 "batch_size": args.batch_size,
                 "learning_rate": args.learning_rate,
                 "epochs": args.epochs,
+                "patience": args.patience,
+                "min_delta": args.min_delta,
                 "device": str(device),
                 "normalization_mean": mean,
                 "normalization_std": std,
@@ -88,12 +93,19 @@ def train_model(args, model_name, loaders, mean, std, device):
                 {"train_loss": train_loss, "val_loss": val_loss},
                 step=epoch,
             )
-            if val_loss < best_val_loss:
+            improved = val_loss < best_val_loss - args.min_delta
+            if improved:
                 best_val_loss = val_loss
+                epochs_without_improvement = 0
                 best_state = {
                     key: value.detach().cpu().clone()
                     for key, value in model.state_dict().items()
                 }
+            else:
+                epochs_without_improvement += 1
+                if args.patience > 0 and epochs_without_improvement >= args.patience:
+                    mlflow.log_param("stopped_epoch", epoch)
+                    break
 
         model.load_state_dict(best_state)
         mlflow.log_metric("best_val_loss", best_val_loss)
@@ -147,12 +159,19 @@ def parse_args():
         default=os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"),
     )
     parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--patience", type=int, default=5)
+    parser.add_argument("--min-delta", type=float, default=0.0)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--sequence-length", type=int, default=24)
     parser.add_argument("--hidden-size", type=int, default=32)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--experiment-name",
+        default="jena-temperature-forecasting",
+    )
+    parser.add_argument("--run-name-suffix", default="baseline")
     return parser.parse_args()
 
 
@@ -160,7 +179,7 @@ def main():
     args = parse_args()
     set_seed(args.seed)
     mlflow.set_tracking_uri(args.tracking_uri)
-    mlflow.set_experiment("jena-temperature-forecasting")
+    mlflow.set_experiment(args.experiment_name)
     device = resolve_device(args.device)
     loaders = get_jena_loaders(
         args.data_dir,
