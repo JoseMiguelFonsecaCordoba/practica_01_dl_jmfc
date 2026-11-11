@@ -67,9 +67,7 @@ def train_model(args, model_name, loaders, mean, std, device):
     best_state = None
     epochs_without_improvement = 0
 
-    with mlflow.start_run(
-        run_name=f"{model_name}-{args.run_name_suffix}"
-    ):
+    with mlflow.start_run(run_name=f"{model_name}-{args.run_name_suffix}"):
         mlflow.log_params(
             {
                 "model": model_name,
