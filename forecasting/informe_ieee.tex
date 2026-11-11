@@ -1,0 +1,296 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+\definecolor{codegray}{RGB}{245,245,245}
+\lstset{
+    basicstyle=\ttfamily\scriptsize,
+    backgroundcolor=\color{codegray},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Forecasting de Temperatura con RNN y LSTM\\
+       usando MLflow, DVC y Docker}
+
+\author{
+\IEEEauthorblockN{Jose Miguel Fonseca Cordoba}
+\IEEEauthorblockA{Curso de Deep Learning\\
+2026}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Se desarrolló un sistema reproducible de forecasting de temperatura usando
+el conjunto de datos Jena Climate. Se implementaron y compararon una red
+neuronal recurrente (RNN) y una red Long Short-Term Memory (LSTM). El
+preprocesamiento utiliza normalización calculada únicamente sobre el conjunto
+de entrenamiento y ventanas de 24 observaciones horarias para predecir la
+temperatura siguiente. Los experimentos se registraron con MLflow, el
+entrenamiento se ejecutó dentro de Docker con GPU y el mejor modelo se
+desplegó mediante FastAPI en un contenedor separado. La configuración
+experimental mejorada obtuvo un RMSE de $0.7253\,^\circ$C con LSTM, frente a
+$0.7330\,^\circ$C$ con RNN. El pipeline también incorpora DVC local,
+pre-commit, GitHub Actions y pruebas de inferencia mediante curl.
+\end{abstract}
+
+\begin{IEEEkeywords}
+series temporales, forecasting, RNN, LSTM, MLflow, DVC, Docker.
+\end{IEEEkeywords}
+
+\section{Introducción}
+
+El objetivo del proyecto es construir un pipeline completo de aprendizaje
+profundo para pronosticar una serie temporal y desplegar el modelo ganador
+como un servicio de inferencia. El sistema debía incluir preprocesamiento,
+comparación entre RNN y LSTM, seguimiento experimental con MLflow,
+entrenamiento en contenedores, versionado de datos y un servidor de
+inferencia sin utilizar Triton.
+
+La solución se implementó como una nueva fase independiente dentro del
+repositorio existente, sin modificar las fases anteriores de clasificación
+con VGG11 ni detección de objetos.
+
+\section{Datos y preprocesamiento}
+
+Se utilizó Jena Climate, un registro multivariable de observaciones
+meteorológicas muestreadas aproximadamente cada diez minutos. Para este
+proyecto se seleccionó la variable de temperatura y se tomó una observación
+cada seis registros, obteniendo una frecuencia aproximada de una hora.
+
+Los datos se dividieron temporalmente en 70\% para entrenamiento, 15\% para
+validación y 15\% para prueba. La media y la desviación estándar se
+calcularon exclusivamente con el conjunto de entrenamiento:
+
+\[
+x_{\mathrm{norm}} = \frac{x-\mu_{\mathrm{train}}}
+                         {\sigma_{\mathrm{train}}}
+\]
+
+Cada muestra contiene 24 valores consecutivos y el objetivo es el siguiente
+valor:
+
+\[
+[x_t,\ldots,x_{t+23}] \longrightarrow x_{t+24}
+\]
+
+El preprocesamiento evita fuga de información y se implementa en
+\texttt{forecasting/data/series.py}.
+
+\section{Modelos}
+
+Se entrenaron dos modelos con la misma tarea y los mismos datos.
+
+\subsection{RNN}
+
+La RNN utiliza una capa recurrente con una representación oculta de 64
+unidades en la configuración experimental. La salida correspondiente al
+último instante temporal se pasa a una capa lineal que produce una
+predicción escalar.
+
+\subsection{LSTM}
+
+La LSTM utiliza la misma dimensión oculta y una capa lineal de salida. Sus
+estados de memoria y compuertas permiten conservar dependencias temporales
+de mayor duración, lo cual resulta útil en series con patrones diarios y
+estacionales.
+
+\section{Entrenamiento y seguimiento}
+
+El entrenamiento se ejecuta dentro de Docker utilizando una imagen de
+PyTorch con CUDA. La configuración mejorada utiliza:
+
+\begin{itemize}
+    \item 40 épocas como máximo.
+    \item \texttt{hidden\_size=64}.
+    \item Tasa de aprendizaje $5\times10^{-4}$.
+    \item Batch de 64 muestras.
+    \item Early stopping con paciencia de 5 épocas.
+    \item Semilla aleatoria fija.
+\end{itemize}
+
+MLflow registra los parámetros, las pérdidas por época, la mejor pérdida de
+validación y los modelos serializados. El experimento mejorado se identificó
+como:
+
+\begin{lstlisting}
+jena-temperature-forecasting-experiments
+\end{lstlisting}
+
+El entrenamiento se puede reproducir mediante:
+
+\begin{lstlisting}[language=bash]
+dvc repro
+\end{lstlisting}
+
+DVC mantiene la definición del pipeline en \texttt{dvc.yaml} y el estado
+reproducible en \texttt{dvc.lock}. El almacenamiento DVC utilizado en esta
+versión es local.
+
+\section{Resultados}
+
+La configuración inicial, con 10 épocas y 32 unidades ocultas, obtuvo:
+
+\begin{table}[h]
+\centering
+\caption{Resultados de la configuración baseline.}
+\begin{tabular}{lcc}
+\toprule
+Modelo & MSE normalizado & RMSE ($^\circ$C) \\
+\midrule
+LSTM & 0.007481 & 0.7486 \\
+RNN  & 0.007649 & 0.7570 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La configuración experimental mejorada obtuvo:
+
+\begin{table}[h]
+\centering
+\caption{Resultados de la configuración mejorada.}
+\begin{tabular}{lcc}
+\toprule
+Modelo & MSE normalizado & RMSE ($^\circ$C) \\
+\midrule
+LSTM & 0.007023 & \textbf{0.7253} \\
+RNN  & 0.007172 & 0.7330 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La LSTM mejorada redujo el RMSE respecto a la LSTM baseline:
+
+\[
+0.7486 - 0.7253 = 0.0233\,^\circ\mathrm{C}
+\]
+
+Por lo tanto, la LSTM fue seleccionada como modelo final.
+
+\section{Servidor de inferencia}
+
+El modelo final se copia en:
+
+\begin{lstlisting}
+forecasting/artifacts/best_model.pt
+\end{lstlisting}
+
+El servidor FastAPI se ejecuta en Docker y expone el puerto 5002. El
+endpoint de salud confirmó:
+
+\begin{lstlisting}
+{
+  "status": "ok",
+  "model": "lstm",
+  "device": "cpu",
+  "sequence_length": 24
+}
+\end{lstlisting}
+
+El endpoint \texttt{POST /predict} recibe exactamente 24 temperaturas y
+devuelve la predicción desnormalizada en grados Celsius. El entrenamiento
+utiliza GPU, mientras que el servicio de inferencia final utiliza CPU.
+
+\section{Pruebas funcionales}
+
+Se preparó un script con tres pruebas reproducibles:
+
+\begin{enumerate}
+    \item Verificación de \texttt{GET /health}.
+    \item Predicción válida con 24 valores.
+    \item Rechazo de una secuencia inválida con HTTP 422.
+\end{enumerate}
+
+El script se encuentra en:
+
+\begin{lstlisting}
+forecasting/tests/curl_tests.sh
+\end{lstlisting}
+
+La ejecución produjo:
+
+\begin{lstlisting}
+All inference curl tests passed.
+\end{lstlisting}
+
+Además, las pruebas unitarias finalizaron con:
+
+\begin{lstlisting}
+2 passed
+\end{lstlisting}
+
+\section{Reproducibilidad y calidad}
+
+El proyecto utiliza Git para el código, DVC para el pipeline y artefactos
+grandes, MLflow para el seguimiento de experimentos, Docker para el
+entrenamiento e inferencia, y pre-commit para validaciones locales.
+
+GitHub Actions ejecuta automáticamente:
+
+\begin{itemize}
+    \item Pruebas unitarias.
+    \item Compilación de los módulos Python.
+    \item Hooks de pre-commit.
+\end{itemize}
+
+El workflow no entrena modelos en cada commit porque el entrenamiento con GPU
+no es apropiado para una validación rápida de código.
+
+\section{Limitaciones}
+
+El modelo utiliza únicamente temperatura como variable de entrada y predice
+un solo paso temporal. El servidor no realiza todavía forecasting
+multihorizonte. Asimismo, el almacenamiento DVC es local, por lo que otra
+computadora necesitaría una copia del dataset y de los checkpoints o un
+remoto DVC configurado.
+
+\section{Conclusiones}
+
+Se implementó un pipeline completo de forecasting con RNN y LSTM. La
+configuración experimental con mayor capacidad y early stopping mejoró el
+RMSE de la LSTM de 0.7486 a 0.7253 grados Celsius. El modelo final se
+registró con MLflow, se seleccionó mediante el pipeline DVC y se desplegó
+correctamente en un servidor FastAPI dentro de Docker.
+
+Las tres pruebas de inferencia y las pruebas unitarias confirmaron el
+funcionamiento del servicio. El resultado cumple los requisitos de
+preprocesamiento, comparación de modelos, seguimiento experimental,
+entrenamiento en contenedor, versionado y despliegue.
+
+\begin{thebibliography}{00}
+
+\bibitem{jena}
+M. L. B. et al., ``The Jena Climate dataset,'' Max Planck Institute for
+Biogeochemistry, 2009--2016.
+
+\bibitem{mlflow}
+MLflow, ``An open source platform for the machine learning lifecycle,''
+\url{https://mlflow.org/}.
+
+\bibitem{dvc}
+DVC, ``Data Version Control,'' \url{https://dvc.org/}.
+
+\bibitem{lstm}
+S. Hochreiter and J. Schmidhuber, ``Long short-term memory,''
+\textit{Neural Computation}, vol. 9, no. 8, pp. 1735--1780, 1997.
+
+\end{thebibliography}
+
+\end{document}
