@@ -14,7 +14,8 @@ stages:
       size: 43164220
   train:
     cmd: docker compose -f docker-compose.forecasting.yml -f 
-      docker-compose.forecasting.gpu.yml run --rm forecasting-train
+      docker-compose.forecasting.gpu.yml -f 
+      docker-compose.forecasting.experimental.yml run --rm forecasting-train
     deps:
     - path: forecasting/data/jena_climate_2009_2016.csv
       hash: md5
@@ -30,35 +31,35 @@ stages:
       size: 401
     - path: forecasting/train.py
       hash: md5
-      md5: e243002990b18c032c2a6f52d5009cd6
-      size: 6035
+      md5: ef9f4ccd91eae195a44468de590fe0bf
+      size: 6807
     outs:
     - path: forecasting/artifacts/lstm_best.pt
       hash: md5
-      md5: de748bc766b7cc048f6c903effbac2e3
+      md5: 53d732e3d05c1058c6d194198de60332
       size: 20764
     - path: forecasting/artifacts/model_metadata.json
       hash: md5
-      md5: d3d96236cefbb9788e0c53e91fcaafbe
+      md5: 1a5ef38939212a63afdb6953edccc3a1
       size: 504
     - path: forecasting/artifacts/rnn_best.pt
       hash: md5
-      md5: 2ed114abe6dad7687823747db9944b25
+      md5: dec503fded4879445078b45772652562
       size: 7314
   select-best:
     cmd: python -m forecasting.select_best
     deps:
     - path: forecasting/artifacts/lstm_best.pt
       hash: md5
-      md5: de748bc766b7cc048f6c903effbac2e3
+      md5: 53d732e3d05c1058c6d194198de60332
       size: 20764
     - path: forecasting/artifacts/model_metadata.json
       hash: md5
-      md5: d3d96236cefbb9788e0c53e91fcaafbe
+      md5: 1a5ef38939212a63afdb6953edccc3a1
       size: 504
     - path: forecasting/artifacts/rnn_best.pt
       hash: md5
-      md5: 2ed114abe6dad7687823747db9944b25
+      md5: dec503fded4879445078b45772652562
       size: 7314
     - path: forecasting/select_best.py
       hash: md5
@@ -67,5 +68,5 @@ stages:
     outs:
     - path: forecasting/artifacts/best_model.pt
       hash: md5
-      md5: de748bc766b7cc048f6c903effbac2e3
+      md5: 014ab481b5ef08ac60f230ba49cd65a8
       size: 20764
